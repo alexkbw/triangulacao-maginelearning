@@ -31,6 +31,55 @@ Aplicação completa de análise de padrões em roleta europeia usando **Machine
    - Total de acertos
    - Taxa de acerto percentual
 
+## 🔗 API de Link Direto (NOVO!)
+
+Agora você pode adicionar números diretamente via URL, sem precisar usar a interface!
+
+### Como Usar:
+
+**Formato da URL:**
+```
+https://seu-dominio.com/api/roulette/add-number/{NÚMERO}
+```
+
+**Exemplos:**
+```
+# Adicionar número 17
+https://ola-rides-24.preview.emergentagent.com/api/roulette/add-number/17
+
+# Adicionar número 0
+https://ola-rides-24.preview.emergentagent.com/api/roulette/add-number/0
+
+# Adicionar número 25
+https://ola-rides-24.preview.emergentagent.com/api/roulette/add-number/25
+```
+
+### Resposta JSON:
+```json
+{
+  "success": true,
+  "message": "Número 17 adicionado com sucesso!",
+  "number": 17,
+  "is_hit": false,
+  "suggestions": {
+    "main_numbers": [35, 31, 25],
+    "regions": [[...], [...], [...]],
+    "probabilities": [0.3, 0.23, 0.17]
+  },
+  "stats": {
+    "total": 10,
+    "last_added": 17
+  }
+}
+```
+
+### Casos de Uso:
+- 📱 **Criar bookmarks** no navegador para números frequentes
+- 🤖 **Automação** com scripts/bots
+- 🔌 **Webhooks** de sistemas externos
+- 📊 **Integração** com outras ferramentas
+- ⚡ **Acesso rápido** sem interface
+
 ## 🎯 Como Usar
 
 1. **Adicionar Número**
