@@ -176,9 +176,8 @@ async def root():
     return {"message": "Roulette ML Analyzer API"}
 
 
-@api_router.post("/roulette/add", response_model=RouletteNumber)
-async def add_number(input: RouletteNumberInput):
-    """Adiciona um novo número à sequência"""
+async def _add_number_logic(number: int):
+    """Lógica compartilhada para adicionar número"""
     # Buscar histórico existente
     history = await db.roulette_history.find({}, {"_id": 0}).sort("timestamp", 1).to_list(1000)
     
@@ -186,12 +185,12 @@ async def add_number(input: RouletteNumberInput):
     if history and history[-1].get('suggestions'):
         # Verificar se o novo número está nas sugestões anteriores
         previous_suggestions = history[-1]['suggestions']
-        is_hit = input.number in previous_suggestions
+        is_hit = number in previous_suggestions
     else:
         is_hit = False
     
     # Gerar novas sugestões baseadas no histórico + novo número
-    all_numbers = [h['number'] for h in history] + [input.number]
+    all_numbers = [h['number'] for h in history] + [number]
     suggestions = analyze_patterns(all_numbers)
     
     # Criar lista flat de todos os números sugeridos
@@ -202,7 +201,7 @@ async def add_number(input: RouletteNumberInput):
     
     # Criar objeto
     roulette_obj = RouletteNumber(
-        number=input.number,
+        number=number,
         suggestions=all_suggested_numbers,
         is_hit=is_hit
     )
@@ -213,7 +212,48 @@ async def add_number(input: RouletteNumberInput):
     
     await db.roulette_history.insert_one(doc)
     
+    return roulette_obj, suggestions
+
+
+@api_router.post("/roulette/add", response_model=RouletteNumber)
+async def add_number(input: RouletteNumberInput):
+    """Adiciona um novo número à sequência via POST"""
+    roulette_obj, _ = await _add_number_logic(input.number)
     return roulette_obj
+
+
+@api_router.get("/roulette/add-number/{number}")
+async def add_number_via_link(number: int):
+    """
+    Adiciona um novo número à sequência via GET (link direto)
+    
+    Exemplo: /api/roulette/add-number/17
+    
+    Retorna o número adicionado e as novas sugestões
+    """
+    # Validar número
+    if number < 0 or number > 36:
+        raise HTTPException(status_code=400, detail="Número deve estar entre 0 e 36")
+    
+    # Adicionar número
+    roulette_obj, suggestions = await _add_number_logic(number)
+    
+    # Retornar resposta completa com sugestões
+    return {
+        "success": True,
+        "message": f"Número {number} adicionado com sucesso!",
+        "number": number,
+        "is_hit": roulette_obj.is_hit,
+        "suggestions": {
+            "main_numbers": suggestions.main_numbers,
+            "regions": suggestions.regions,
+            "probabilities": suggestions.probabilities
+        },
+        "stats": {
+            "total": len(await db.roulette_history.find({}, {"_id": 0}).to_list(1000)),
+            "last_added": number
+        }
+    }
 
 
 @api_router.post("/roulette/undo")
