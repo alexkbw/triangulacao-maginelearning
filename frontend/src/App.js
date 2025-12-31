@@ -138,6 +138,29 @@ function App() {
             Analisador de Roleta ML
           </h1>
           <p className="text-gray-400 text-lg">Análise inteligente de padrões com Machine Learning</p>
+          
+          {/* API Info */}
+          <Card className="bg-blue-900/20 border-blue-600/30 mt-4">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-2 text-left">
+                <span className="text-2xl">🔗</span>
+                <div className="flex-1">
+                  <p className="text-blue-300 font-semibold mb-1">API de Link Direto</p>
+                  <p className="text-gray-300 text-sm mb-2">
+                    Adicione números via URL (perfeito para automação):
+                  </p>
+                  <div className="bg-gray-900/50 p-2 rounded border border-gray-700">
+                    <code className="text-green-400 text-xs break-all">
+                      {BACKEND_URL}/api/roulette/add-number/NÚMERO
+                    </code>
+                  </div>
+                  <p className="text-gray-400 text-xs mt-2">
+                    Exemplo: .../add-number/17 para adicionar o número 17
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Stats */}
