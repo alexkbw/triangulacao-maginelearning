@@ -173,7 +173,22 @@ def analyze_patterns(numbers: List[int]) -> Suggestion:
 # Endpoints
 @api_router.get("/")
 async def root():
-    return {"message": "Roulette ML Analyzer API"}
+    return {
+        "message": "Roulette ML Analyzer API",
+        "version": "1.0",
+        "endpoints": {
+            "add_via_link": "/api/roulette/add-number/{number}",
+            "add_via_post": "/api/roulette/add",
+            "undo": "/api/roulette/undo",
+            "clear": "/api/roulette/clear",
+            "history": "/api/roulette/history",
+            "suggestions": "/api/roulette/suggestions"
+        },
+        "examples": {
+            "add_number_17": f"/api/roulette/add-number/17",
+            "add_number_0": f"/api/roulette/add-number/0"
+        }
+    }
 
 
 async def _add_number_logic(number: int):
