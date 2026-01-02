@@ -42,14 +42,40 @@ function App() {
 
   const fetchHistory = async () => {
     try {
+      setSyncing(true);
       const response = await axios.get(`${API}/roulette/history`);
       setHistory(response.data.history || []);
+      setLastUpdate(new Date());
     } catch (error) {
       console.error("Erro ao buscar histórico:", error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const fetchHistoryQuietly = async () => {
+    try {
+      setSyncing(true);
+      const response = await axios.get(`${API}/roulette/history`);
+      setHistory(response.data.history || []);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error("Erro ao buscar histórico:", error);
+    } finally {
+      setSyncing(false);
     }
   };
 
   const fetchSuggestions = async () => {
+    try {
+      const response = await axios.get(`${API}/roulette/suggestions`);
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar sugestões:", error);
+    }
+  };
+
+  const fetchSuggestionsQuietly = async () => {
     try {
       const response = await axios.get(`${API}/roulette/suggestions`);
       setSuggestions(response.data);
