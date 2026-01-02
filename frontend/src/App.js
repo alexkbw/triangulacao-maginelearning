@@ -246,7 +246,12 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-gray-400">Total de Números</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-gray-400">Total de Números</CardTitle>
+                {autoRefresh && syncing && (
+                  <RefreshCw className="w-3 h-3 text-green-500 animate-spin" />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white">{history.length}</div>
