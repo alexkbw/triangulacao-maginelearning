@@ -196,7 +196,35 @@ function App() {
               <div className="flex items-start gap-2 text-left">
                 <span className="text-2xl">🔗</span>
                 <div className="flex-1">
-                  <p className="text-blue-300 font-semibold mb-1">API de Link Direto</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-blue-300 font-semibold">API de Link Direto</p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant={autoRefresh ? "outline" : "default"}
+                        onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={autoRefresh ? "border-green-500 text-green-400" : ""}
+                        data-testid="auto-refresh-toggle"
+                      >
+                        {autoRefresh ? (
+                          <>
+                            <RefreshCw className={`w-3 h-3 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+                            Auto-sync ON
+                          </>
+                        ) : (
+                          <>
+                            <Pause className="w-3 h-3 mr-1" />
+                            Pausado
+                          </>
+                        )}
+                      </Button>
+                      {autoRefresh && (
+                        <span className="text-xs text-gray-400">
+                          {syncing ? "Sincronizando..." : `Atualizado ${formatLastUpdate()}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-gray-300 text-sm mb-2">
                     Adicione números via URL (perfeito para automação):
                   </p>
