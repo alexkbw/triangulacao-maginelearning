@@ -168,6 +168,15 @@ function App() {
 
   const stats = calculateStats();
 
+  const formatLastUpdate = () => {
+    if (!lastUpdate) return "Nunca";
+    const now = new Date();
+    const diff = Math.floor((now - lastUpdate) / 1000);
+    if (diff < 5) return "Agora mesmo";
+    if (diff < 60) return `${diff}s atrás`;
+    return lastUpdate.toLocaleTimeString("pt-BR");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
       <Toaster position="top-right" richColors />
