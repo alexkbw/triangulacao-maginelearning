@@ -18,11 +18,27 @@ function App() {
   const [history, setHistory] = useState([]);
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [syncing, setSyncing] = useState(false);
 
+  // Buscar dados iniciais
   useEffect(() => {
     fetchHistory();
     fetchSuggestions();
   }, []);
+
+  // Auto-refresh a cada 3 segundos
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      fetchHistoryQuietly();
+      fetchSuggestionsQuietly();
+    }, 3000); // 3 segundos
+
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
 
   const fetchHistory = async () => {
     try {
