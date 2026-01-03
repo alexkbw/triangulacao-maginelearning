@@ -204,29 +204,41 @@ async def _add_number_logic(number: int):
     # Buscar histórico existente
     history = await db.roulette_history.find({}, {"_id": 0}).sort("timestamp", 1).to_list(1000)
     
-    # Verificar se o número anterior tinha sugestões
-    if history and history[-1].get('suggestions'):
-        # Verificar se o novo número está nas sugestões anteriores
-        previous_suggestions = history[-1]['suggestions']
-        is_hit = number in previous_suggestions
-    else:
-        is_hit = False
+    # Verificar acertos para cada análise
+    is_hit_ml = False
+    is_hit_p2 = False
+    is_hit_p3 = False
+    
+    if history and history[-1].get('suggestions_ml'):
+        is_hit_ml = number in history[-1]['suggestions_ml']
+    if history and history[-1].get('suggestions_p2'):
+        is_hit_p2 = number in history[-1]['suggestions_p2']
+    if history and history[-1].get('suggestions_p3'):
+        is_hit_p3 = number in history[-1]['suggestions_p3']
     
     # Gerar novas sugestões baseadas no histórico + novo número
     all_numbers = [h['number'] for h in history] + [number]
     suggestions = analyze_patterns(all_numbers)
     
-    # Criar lista flat de todos os números sugeridos
-    all_suggested_numbers = []
+    # Criar lista flat de todos os números sugeridos pelo ML
+    all_suggested_ml = []
     for region in suggestions.regions:
-        all_suggested_numbers.extend(region)
-    all_suggested_numbers = list(set(all_suggested_numbers))
+        all_suggested_ml.extend(region)
+    all_suggested_ml = list(set(all_suggested_ml))
+    
+    # P2 e P3 sempre retornam os mesmos números
+    all_suggested_p2 = sorted(list(P2_NUMBERS))
+    all_suggested_p3 = sorted(list(P3_NUMBERS))
     
     # Criar objeto
     roulette_obj = RouletteNumber(
         number=number,
-        suggestions=all_suggested_numbers,
-        is_hit=is_hit
+        suggestions_ml=all_suggested_ml,
+        suggestions_p2=all_suggested_p2,
+        suggestions_p3=all_suggested_p3,
+        is_hit_ml=is_hit_ml,
+        is_hit_p2=is_hit_p2,
+        is_hit_p3=is_hit_p3
     )
     
     # Salvar no banco
