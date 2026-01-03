@@ -264,7 +264,7 @@ async def add_number_via_link(number: int):
     
     Exemplo: /api/roulette/add-number/17
     
-    Retorna o número adicionado e as novas sugestões
+    Retorna o número adicionado e as novas sugestões para as 3 análises
     """
     # Validar número
     if number < 0 or number > 36:
@@ -273,13 +273,26 @@ async def add_number_via_link(number: int):
     # Adicionar número
     roulette_obj, suggestions = await _add_number_logic(number)
     
-    # Retornar resposta completa com sugestões
+    # Retornar resposta completa com as 3 análises
     return {
         "success": True,
         "message": f"Número {number} adicionado com sucesso!",
         "number": number,
-        "is_hit": roulette_obj.is_hit,
-        "suggestions": {
+        "results": {
+            "ml": {
+                "is_hit": roulette_obj.is_hit_ml,
+                "suggestions": roulette_obj.suggestions_ml
+            },
+            "p2": {
+                "is_hit": roulette_obj.is_hit_p2,
+                "suggestions": roulette_obj.suggestions_p2
+            },
+            "p3": {
+                "is_hit": roulette_obj.is_hit_p3,
+                "suggestions": roulette_obj.suggestions_p3
+            }
+        },
+        "ml_detailed": {
             "main_numbers": suggestions.main_numbers,
             "regions": suggestions.regions,
             "probabilities": suggestions.probabilities
