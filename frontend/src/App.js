@@ -291,7 +291,7 @@ function App() {
         </Card>
 
         {/* Suggestions Summary */}
-        {suggestions && (
+        {suggestions && history.length > 0 && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
@@ -302,9 +302,9 @@ function App() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg">
-                  <p className="text-blue-300 font-semibold mb-1">ML (Machine Learning)</p>
+                  <p className="text-blue-300 font-semibold mb-1">ML (Aprendizado de Máquina)</p>
                   <p className="text-gray-300 text-sm">
-                    {suggestions.main_numbers?.join(", ")}
+                    {history[history.length - 1]?.suggestions_ml?.join(", ") || "Aguardando..."}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
