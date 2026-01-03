@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Undo, Plus, TrendingUp, RefreshCw, Pause, Play } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Toaster } from "@/components/ui/sonner";
+import { Trash2, Undo, Plus, TrendingUp, RefreshCw, Pause } from "lucide-react";
 import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -35,7 +34,7 @@ function App() {
     const interval = setInterval(() => {
       fetchHistoryQuietly();
       fetchSuggestionsQuietly();
-    }, 3000); // 3 segundos
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [autoRefresh]);
@@ -158,15 +157,13 @@ function App() {
     return redNumbers.includes(num) ? "bg-red-600" : "bg-gray-900";
   };
 
-  const calculateStats = () => {
+  const calculateStats = (hitField) => {
     if (history.length === 0) return { total: 0, hits: 0, accuracy: 0 };
-    const hits = history.filter(h => h.is_hit).length;
-    const total = history.length - 1; // Primeiro número não tem sugestão anterior
+    const hits = history.filter(h => h[hitField]).length;
+    const total = history.length - 1;
     const accuracy = total > 0 ? ((hits / total) * 100).toFixed(1) : 0;
     return { total, hits, accuracy };
   };
-
-  const stats = calculateStats();
 
   const formatLastUpdate = () => {
     if (!lastUpdate) return "Nunca";
@@ -177,18 +174,22 @@ function App() {
     return lastUpdate.toLocaleTimeString("pt-BR");
   };
 
+  const statsML = calculateStats('is_hit_ml');
+  const statsP2 = calculateStats('is_hit_p2');
+  const statsP3 = calculateStats('is_hit_p3');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
       <Toaster position="top-right" richColors />
       
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-[1800px] mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl md:text-5xl font-bold text-white flex items-center justify-center gap-3">
             <span className="text-5xl">🎰</span>
-            Analisador de Roleta ML
+            Analisador de Roleta - 3 Análises
           </h1>
-          <p className="text-gray-400 text-lg">Análise inteligente de padrões com Machine Learning</p>
+          <p className="text-gray-400 text-lg">ML + P2 + P3 - Comparação em Tempo Real</p>
           
           {/* API Info */}
           <Card className="bg-blue-900/20 border-blue-600/30 mt-4">
@@ -226,15 +227,7 @@ function App() {
                     </div>
                   </div>
                   <p className="text-gray-300 text-sm mb-2">
-                    Adicione números via URL (perfeito para automação):
-                  </p>
-                  <div className="bg-gray-900/50 p-2 rounded border border-gray-700">
-                    <code className="text-green-400 text-xs break-all">
-                      {BACKEND_URL}/api/roulette/add-number/NÚMERO
-                    </code>
-                  </div>
-                  <p className="text-gray-400 text-xs mt-2">
-                    Exemplo: .../add-number/17 para adicionar o número 17
+                    Adicione números via URL: {BACKEND_URL}/api/roulette/add-number/NÚMERO
                   </p>
                 </div>
               </div>
@@ -242,226 +235,262 @@ function App() {
           </Card>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-gray-400">Total de Números</CardTitle>
-                {autoRefresh && syncing && (
-                  <RefreshCw className="w-3 h-3 text-green-500 animate-spin" />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">{history.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-gray-400">Acertos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-500">{stats.hits}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-gray-400">Taxa de Acerto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-500">{stats.accuracy}%</div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Controls */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">Adicionar Número</CardTitle>
+            <CardDescription className="text-gray-400">Digite o número que caiu na roleta (0-36)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min="0"
+                max="36"
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ex: 17"
+                className="bg-gray-700 border-gray-600 text-white text-xl"
+                disabled={loading}
+                data-testid="number-input"
+              />
+              <Button
+                onClick={addNumber}
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700"
+                data-testid="add-number-button"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Input Section */}
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">Adicionar Número</CardTitle>
-              <CardDescription className="text-gray-400">Digite o número que caiu na roleta (0-36)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  min="0"
-                  max="36"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ex: 17"
-                  className="bg-gray-700 border-gray-600 text-white text-xl"
-                  disabled={loading}
-                  data-testid="number-input"
-                />
-                <Button
-                  onClick={addNumber}
-                  disabled={loading}
-                  className="bg-green-600 hover:bg-green-700"
-                  data-testid="add-number-button"
-                >
-                  <Plus className="w-5 h-5" />
-                </Button>
-              </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={undoLast}
+                disabled={loading || history.length === 0}
+                variant="outline"
+                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                data-testid="undo-button"
+              >
+                <Undo className="w-4 h-4 mr-2" />
+                Desfazer
+              </Button>
+              <Button
+                onClick={clearAll}
+                disabled={loading || history.length === 0}
+                variant="outline"
+                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                data-testid="clear-button"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Limpar Tudo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={undoLast}
-                  disabled={loading || history.length === 0}
-                  variant="outline"
-                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  data-testid="undo-button"
-                >
-                  <Undo className="w-4 h-4 mr-2" />
-                  Desfazer
-                </Button>
-                <Button
-                  onClick={clearAll}
-                  disabled={loading || history.length === 0}
-                  variant="outline"
-                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  data-testid="clear-button"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Limpar Tudo
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Suggestions */}
+        {/* Suggestions Summary */}
+        {suggestions && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Sugestões de Apostas
+                Sugestões Atuais
               </CardTitle>
-              <CardDescription className="text-gray-400">3 regiões recomendadas com vizinhos</CardDescription>
             </CardHeader>
             <CardContent>
-              {suggestions && suggestions.regions ? (
-                <div className="space-y-3">
-                  {suggestions.regions.map((region, idx) => (
-                    <div key={idx} className="p-3 bg-gray-700 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-300 font-semibold">Região {idx + 1}</span>
-                        <Badge variant="outline" className="bg-blue-600/20 text-blue-400 border-blue-500">
-                          {suggestions.probabilities[idx] * 100}% confiança
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-400">Principal:</span>
-                          <div className={`${getNumberColor(suggestions.main_numbers[idx])} text-white px-3 py-1 rounded-full text-sm font-bold`}>
-                            {suggestions.main_numbers[idx]}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <span className="text-xs text-gray-400">Vizinhos:</span>
-                          {region.filter(n => n !== suggestions.main_numbers[idx]).map((num) => (
-                            <div key={num} className={`${getNumberColor(num)} text-white px-2 py-1 rounded-full text-xs`}>
-                              {num}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg">
+                  <p className="text-blue-300 font-semibold mb-1">ML (Machine Learning)</p>
+                  <p className="text-gray-300 text-sm">
+                    {suggestions.main_numbers?.join(", ")}
+                  </p>
                 </div>
-              ) : (
-                <p className="text-gray-400 text-center py-8">Adicione números para gerar sugestões</p>
-              )}
+                <div className="p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
+                  <p className="text-purple-300 font-semibold mb-1">P2 (Grupo Fixo)</p>
+                  <p className="text-gray-300 text-sm">
+                    0, 1, 2, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 19, 20, 23, 24, 26, 27, 28, 30, 31, 32, 34, 35
+                  </p>
+                </div>
+                <div className="p-3 bg-green-900/20 border border-green-600/30 rounded-lg">
+                  <p className="text-green-300 font-semibold mb-1">P3 (Grupo Fixo)</p>
+                  <p className="text-gray-300 text-sm">
+                    0, 3, 4, 5, 6, 9, 11, 13, 14, 15, 18, 20, 21, 23, 24, 25, 28, 29, 30, 33, 34, 35
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 3 History Tables Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* ML Table */}
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-blue-400">ML - Machine Learning</CardTitle>
+              <CardDescription className="text-gray-400">
+                Taxa: {statsML.accuracy}% ({statsML.hits}/{statsML.total})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="history-table-ml">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">#</th>
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">Nº</th>
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">Sugestões Anteriores</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className="text-center py-4 text-gray-400 text-xs">
+                          Nenhum número ainda
+                        </td>
+                      </tr>
+                    ) : (
+                      [...history].reverse().map((item, idx) => {
+                        const isHit = item.is_hit_ml;
+                        const rowNum = history.length - idx;
+                        return (
+                          <tr
+                            key={item.id}
+                            className={`border-b border-gray-700 ${isHit ? "bg-green-900/30" : ""}`}
+                            data-testid={`history-row-ml-${isHit ? 'hit' : 'miss'}`}
+                          >
+                            <td className="py-2 px-2 text-gray-400 text-xs">{rowNum}</td>
+                            <td className="py-2 px-2">
+                              <div className={`${getNumberColor(item.number)} text-white px-2 py-0.5 rounded-full text-xs font-bold inline-block`}>
+                                {item.number}
+                              </div>
+                            </td>
+                            <td className="py-2 px-2 text-gray-300 text-xs">
+                              {rowNum === history.length ? "N/A" : 
+                                history[history.length - idx].suggestions_ml?.join(", ") || "-"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* P2 Table */}
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-purple-400">P2 - Grupo Fixo</CardTitle>
+              <CardDescription className="text-gray-400">
+                Taxa: {statsP2.accuracy}% ({statsP2.hits}/{statsP2.total})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="history-table-p2">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">#</th>
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">Nº</th>
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">Sugestões Anteriores</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className="text-center py-4 text-gray-400 text-xs">
+                          Nenhum número ainda
+                        </td>
+                      </tr>
+                    ) : (
+                      [...history].reverse().map((item, idx) => {
+                        const isHit = item.is_hit_p2;
+                        const rowNum = history.length - idx;
+                        return (
+                          <tr
+                            key={item.id}
+                            className={`border-b border-gray-700 ${isHit ? "bg-green-900/30" : ""}`}
+                            data-testid={`history-row-p2-${isHit ? 'hit' : 'miss'}`}
+                          >
+                            <td className="py-2 px-2 text-gray-400 text-xs">{rowNum}</td>
+                            <td className="py-2 px-2">
+                              <div className={`${getNumberColor(item.number)} text-white px-2 py-0.5 rounded-full text-xs font-bold inline-block`}>
+                                {item.number}
+                              </div>
+                            </td>
+                            <td className="py-2 px-2 text-gray-300 text-xs">
+                              {rowNum === history.length ? "N/A" : 
+                                history[history.length - idx].suggestions_p2?.join(", ") || "-"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* P3 Table */}
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-green-400">P3 - Grupo Fixo</CardTitle>
+              <CardDescription className="text-gray-400">
+                Taxa: {statsP3.accuracy}% ({statsP3.hits}/{statsP3.total})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="history-table-p3">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">#</th>
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">Nº</th>
+                      <th className="text-left py-2 px-2 text-gray-300 font-semibold">Sugestões Anteriores</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className="text-center py-4 text-gray-400 text-xs">
+                          Nenhum número ainda
+                        </td>
+                      </tr>
+                    ) : (
+                      [...history].reverse().map((item, idx) => {
+                        const isHit = item.is_hit_p3;
+                        const rowNum = history.length - idx;
+                        return (
+                          <tr
+                            key={item.id}
+                            className={`border-b border-gray-700 ${isHit ? "bg-green-900/30" : ""}`}
+                            data-testid={`history-row-p3-${isHit ? 'hit' : 'miss'}`}
+                          >
+                            <td className="py-2 px-2 text-gray-400 text-xs">{rowNum}</td>
+                            <td className="py-2 px-2">
+                              <div className={`${getNumberColor(item.number)} text-white px-2 py-0.5 rounded-full text-xs font-bold inline-block`}>
+                                {item.number}
+                              </div>
+                            </td>
+                            <td className="py-2 px-2 text-gray-300 text-xs">
+                              {rowNum === history.length ? "N/A" : 
+                                history[history.length - idx].suggestions_p3?.join(", ") || "-"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* History Table */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Histórico</CardTitle>
-            <CardDescription className="text-gray-400">
-              Linhas verdes indicam acertos (número estava nas sugestões anteriores)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full" data-testid="history-table">
-                <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">#</th>
-                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Número</th>
-                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Status</th>
-                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Sugestões Anteriores</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" className="text-center py-8 text-gray-400">
-                        Nenhum número adicionado ainda
-                      </td>
-                    </tr>
-                  ) : (
-                    [...history].reverse().map((item, idx) => {
-                      const isHit = item.is_hit;
-                      const rowNum = history.length - idx;
-                      return (
-                        <tr
-                          key={item.id}
-                          className={`border-b border-gray-700 transition-colors ${
-                            isHit ? "bg-green-900/30" : "hover:bg-gray-700/30"
-                          }`}
-                          data-testid={`history-row-${isHit ? 'hit' : 'miss'}`}
-                        >
-                          <td className="py-3 px-4 text-gray-400">{rowNum}</td>
-                          <td className="py-3 px-4">
-                            <div className={`${getNumberColor(item.number)} text-white px-3 py-1 rounded-full text-sm font-bold inline-block`}>
-                              {item.number}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            {isHit ? (
-                              <Badge className="bg-green-600 hover:bg-green-700">✓ Acerto</Badge>
-                            ) : rowNum === history.length ? (
-                              <Badge variant="outline" className="border-gray-600 text-gray-400">Primeiro</Badge>
-                            ) : (
-                              <Badge variant="outline" className="border-gray-600 text-gray-400">-</Badge>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {rowNum === history.length ? (
-                              <span className="text-gray-500 text-sm">N/A</span>
-                            ) : history[history.length - idx].suggestions ? (
-                              <div className="flex flex-wrap gap-1">
-                                {history[history.length - idx].suggestions.slice(0, 10).map((num) => (
-                                  <span
-                                    key={num}
-                                    className={`${getNumberColor(num)} text-white px-2 py-0.5 rounded text-xs`}
-                                  >
-                                    {num}
-                                  </span>
-                                ))}
-                                {history[history.length - idx].suggestions.length > 10 && (
-                                  <span className="text-gray-400 text-xs">+{history[history.length - idx].suggestions.length - 10}</span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-500 text-sm">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
