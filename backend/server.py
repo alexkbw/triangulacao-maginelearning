@@ -51,8 +51,12 @@ class RouletteNumber(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     number: int
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    suggestions: Optional[List[int]] = None
-    is_hit: bool = False
+    suggestions_ml: Optional[List[int]] = None
+    suggestions_p2: Optional[List[int]] = None
+    suggestions_p3: Optional[List[int]] = None
+    is_hit_ml: bool = False
+    is_hit_p2: bool = False
+    is_hit_p3: bool = False
 
 
 class RouletteNumberInput(BaseModel):
